@@ -2,12 +2,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Headlines</title>
 </head>
 <body>
-    <h1>BBC Headlines</h1>
-    <b>{title}</b> <br/>
-    <b>{first_article}</b> <br/>
-    <p>{article.summary}</p> <br/>
+    <h1>Headlines</h1>
+    {% for article in articles %}
+        <b><a href="{{ article.link }}">{{article.title}}</a></b> <br/>
+        <b>{{article.published}}</b> <br/>
+        <p>{{article.summary}}</p> <br/>
+        <hr />
+    {% endfor %}
 </body>
 </html>
