@@ -24,30 +24,6 @@ DEFAULTS = {
     'currency_to': 'COP'
 }
 
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    publication = get_value_with_fallback("publication")
-    articles = get_news(publication)
-    city = get_value_with_fallback("city")
-    city = city.replace(' ', '+')
-    weather = get_weather(city)
-    currency_from = get_value_with_fallback("currency_from")
-    currency_to = get_value_with_fallback("currency_to")
-    rate, currencies = get_rate(currency_from, currency_to)
-    response = make_response(render_template('index.html',
-                                articles=articles, 
-                                weather=weather,
-                                currency_from=currency_from,
-                                currency_to=currency_to,
-                                rate=rate,
-                                currencies=sorted(currencies)))
-    expires = datetime.datetime.now() + datetime.timedelta(365)
-    response.set_cookie("publication", publication, expires=expires)
-    response.set_cookie("city", city, expires=expires)
-    response.set_cookie("currency_from", currency_from, expires=expires)
-    response.set_cookie("currency_to", currency_to, expires=expires)
-    return  response
-
 def get_news(query):
     #query = request.args.get("publication")
     if not query or query.lower() not in RSS_FEEDS:
@@ -60,7 +36,6 @@ def get_news(query):
     
 
 def get_weather(city):
-    query = urllib.parse.quote(city)
     #print(city)
     # 1. get the api url with the api key
     api_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&appid={WEATHER_API_KEY}"
@@ -96,6 +71,34 @@ def get_value_with_fallback(key):
         return request.args.get(key)
     if request.cookies.get(key):
         return request.cookies.get(key)
+    return DEFAULTS[key]
+
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    publication = get_value_with_fallback("publication")
+    articles = get_news(publication)
+
+    city = get_value_with_fallback("city")
+    city = city.replace(' ', '+')
+    weather = get_weather(city)
+
+    currency_from = get_value_with_fallback("currency_from")
+    currency_to = get_value_with_fallback("currency_to")
+    rate, currencies = get_rate(currency_from, currency_to)
+
+    response = make_response(render_template('index.html',
+                                articles=articles, 
+                                weather=weather,
+                                currency_from=currency_from,
+                                currency_to=currency_to,
+                                rate=rate,
+                                currencies=sorted(currencies)))
+    expires = datetime.datetime.now() + datetime.timedelta(365)
+    response.set_cookie("publication", publication, expires=expires)
+    response.set_cookie("city", city, expires=expires)
+    response.set_cookie("currency_from", currency_from, expires=expires)
+    response.set_cookie("currency_to", currency_to, expires=expires)
+    return  response
 
 
 if __name__ == '__main__':

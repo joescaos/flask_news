@@ -2,10 +2,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
     <title>Principales Noticias BBC, CNN, IOL</title>
 </head>
 <body>
-    <h1>Principales Noticias BBC, CNN, IOL</h1>
+    <h1 id="header">Principales Noticias BBC, CNN, IOL</h1>
     <h2>Current Weather</h2>
     <form action="/" method="">
         <input type="text" name="city" placeholder="Weather Search" />
