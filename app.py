@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, make_response
 import feedparser
 import json
+import datetime
 import urllib.request,urllib.parse, urllib.error
 import requests
 from secrets import WEATHER_API_KEY, CURRENCY_APY_KEY
@@ -25,29 +26,27 @@ DEFAULTS = {
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    publication = request.args.get('publication')
-    if not publication:
-        publication = DEFAULTS['publication']
+    publication = get_value_with_fallback("publication")
     articles = get_news(publication)
-    city = request.args.get('city')
-    if not city:
-        city = DEFAULTS['city']
+    city = get_value_with_fallback("city")
     city = city.replace(' ', '+')
     weather = get_weather(city)
-    currency_from = request.args.get('currency_from')
-    if not currency_from:
-        currency_from = DEFAULTS['currency_from']
-    currency_to = request.args.get('currency_to')
-    if not currency_to:
-        currency_to = DEFAULTS['currency_to']
+    currency_from = get_value_with_fallback("currency_from")
+    currency_to = get_value_with_fallback("currency_to")
     rate, currencies = get_rate(currency_from, currency_to)
-    return  render_template('index.html', 
+    response = make_response(render_template('index.html',
                                 articles=articles, 
                                 weather=weather,
                                 currency_from=currency_from,
                                 currency_to=currency_to,
                                 rate=rate,
-                                currencies=sorted(currencies))
+                                currencies=sorted(currencies)))
+    expires = datetime.datetime.now() + datetime.timedelta(365)
+    response.set_cookie("publication", publication, expires=expires)
+    response.set_cookie("city", city, expires=expires)
+    response.set_cookie("currency_from", currency_from, expires=expires)
+    response.set_cookie("currency_to", currency_to, expires=expires)
+    return  response
 
 def get_news(query):
     #query = request.args.get("publication")
@@ -91,6 +90,12 @@ def get_rate(frm, to):
     frm_rate = data.get(frm.upper())
     to_rate = data.get(to.upper())
     return (to_rate/frm_rate, data.keys())
+
+def get_value_with_fallback(key):
+    if request.args.get(key):
+        return request.args.get(key)
+    if request.cookies.get(key):
+        return request.cookies.get(key)
 
 
 if __name__ == '__main__':
